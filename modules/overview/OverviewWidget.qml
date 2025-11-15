@@ -153,20 +153,25 @@ Item {
                             const inWorkspaceGroup = (root.workspaceGroup * root.workspacesShown < win?.workspace?.id && win?.workspace?.id <= (root.workspaceGroup + 1) * root.workspacesShown)
                             return inWorkspaceGroup;
                         }).sort((a, b) => {
-                            // Proper stacking order: floating windows on top, sorted by focus history
+                            // Proper stacking order based on Hyprland's window properties
                             const addrA = `0x${a.HyprlandToplevel.address}`
                             const addrB = `0x${b.HyprlandToplevel.address}`
                             const winA = windowByAddress[addrA]
                             const winB = windowByAddress[addrB]
                             
-                            // Floating windows always above tiled windows
+                            // 1. Pinned windows are always on top
+                            if (winA?.pinned !== winB?.pinned) {
+                                return winA?.pinned ? 1 : -1
+                            }
+                            
+                            // 2. Floating windows above tiled windows
                             if (winA?.floating !== winB?.floating) {
                                 return winA?.floating ? 1 : -1
                             }
                             
-                            // Within same type (both floating or both tiled), sort by focus history
-                            // Higher focusHistoryID = more recently focused = higher in stack
-                            return (winA?.focusHistoryID ?? 0) - (winB?.focusHistoryID ?? 0)
+                            // 3. Within same category, sort by focus history
+                            // Lower focusHistoryID = more recently focused = higher in stack
+                            return (winB?.focusHistoryID ?? 0) - (winA?.focusHistoryID ?? 0)
                         })
                     }
                 }
